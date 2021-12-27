@@ -6,7 +6,7 @@
     "lint": "eslint --fix . --ext .js,.jsx,.ts,.tsx",
     "watch:client": "parcel watch ./src/client/index.html --no-hmr --dist-dir dist/client",
     "start": "node dist/server/app.js",
-    "build": "tsc && parcel build ./src/client/index.html",
+    "build": "tsc && parcel build ./src/client/index.html --dist-dir dist/client",
     "dev:server": "ts-node-dev src/server/app.ts",
     "dev": "concurrently --kill-others \"npm run watch:client\" \"npm run dev:server\"",
     "test": "echo \"Error: no test specified\" && exit 1",
