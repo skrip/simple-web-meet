@@ -52,7 +52,6 @@ wsApp.ws('/websocket', {
     let participantName = '';
 
     tp.map(t => {
-      // remove from client
       if (rooms.has(t)) {
         const clients = rooms.get(t)?.client;
         if (clients) {
