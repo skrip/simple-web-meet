@@ -1,0 +1,4 @@
+KEY_FILE=/Users/dhanikuswendha/Documents/own/certificate/192.168.1.8-key.pem
+CERT_FILE=/Users/dhanikuswendha/Documents/own/certificate/192.168.1.8.pem
+APP_PORT=3200
+WEBRTC_IP=192.168.1.8
