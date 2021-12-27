@@ -252,9 +252,11 @@ wsApp.ws('/websocket', {
 });
 
 import test = require('./api/test');
+import getRooms = require('./api/http/getRooms');
 
 wsApp.get('/', serveStatic);
 wsApp.get('/api/test', test);
+wsApp.get('/api/getrooms', getRooms);
 wsApp.any('/*', (res, req) => {
   const filePath = process.cwd() + '/dist/client' + req.getUrl();
   const stats: Stats | undefined = lstatSync(filePath, {throwIfNoEntry: false});

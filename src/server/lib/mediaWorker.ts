@@ -21,13 +21,9 @@ export interface ClientData {
   participantName: string;
   producer_transport: WebRtcTransport | undefined;
   consumer_transports: Array<ConsumerData>;
-  //consumer_transport: WebRtcTransport | undefined;
   producer_video: Producer | undefined;
   producer_audio: Producer | undefined;
   producer_data: Producer | undefined;
-  /*consumer_video: Array<Consumer>;
-  consumer_audio: Array<Consumer>;
-  consumer_data: Array<Consumer>;*/
 }
 
 export interface RoomData {
