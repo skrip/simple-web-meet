@@ -12,6 +12,8 @@ import {store} from '../lib/store';
 import {addParticipant, removeParticipant} from '../lib/messageSlice';
 import {RootState} from '../lib/store';
 import {useParams} from 'react-router-dom';
+import {FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash} from 'react-icons/fa';
+import classNames from 'classnames';
 
 export interface Message {
   method: string;
@@ -23,6 +25,8 @@ export interface Message {
 
 const device = new Device();
 let localStream: MediaStream;
+let webcamTrack: MediaStreamTrack;
+let audioTrack: MediaStreamTrack;
 
 export function Meeting() {
   const participants = useSelector(
@@ -40,6 +44,8 @@ export function Meeting() {
   const videomain = useRef<HTMLVideoElement>(null!);
 
   const videoconsumers = useRef<(HTMLVideoElement | null)[]>([]);
+  const [audioPause, setAudioPause] = useState<boolean>(false);
+  const [videoPause, setVideoPause] = useState<boolean>(false)
 
   const createConsumerTransport = (
     data: TransportOptions,
@@ -185,7 +191,7 @@ export function Meeting() {
       video: true,
       audio: true,
     });
-    const webcamTrack = localStream.getVideoTracks()[0];
+    webcamTrack = localStream.getVideoTracks()[0];
     await sendTransport?.produce({
       track: webcamTrack,
       encodings: [
@@ -198,7 +204,7 @@ export function Meeting() {
       },
     });
 
-    const audioTrack = localStream.getAudioTracks()[0];
+    audioTrack = localStream.getAudioTracks()[0];
     await sendTransport?.produce({track: audioTrack});
 
     videoproducer.current.srcObject = localStream;
@@ -435,8 +441,36 @@ export function Meeting() {
     }
   }, [client]);
 
+  const changeAudioPause = (pause: boolean) => {
+    audioTrack.enabled = !pause;
+    setAudioPause(pause);
+  }
+
+  const changeVideoPause = (pause: boolean) => {
+    webcamTrack.enabled = !pause;
+    setVideoPause(pause);
+  }
+
   return (
-    <div className="flex flex-col justify-between h-screen">
+    <div className="flex flex-col justify-between h-screen relative">
+      
+      <div className="absolute bottom-0 left-0 bg-orange-700 z-20 ml-4 mb-8 rounded-lg">
+        <div className="flex flex-col p-1">
+          <div onClick={() => changeVideoPause(true)} className={classNames({"hidden": videoPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+            <FaVideo />
+          </div>
+          <div onClick={() => changeVideoPause(false)} className={classNames({"hidden": !videoPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+            <FaVideoSlash />
+          </div>
+          <div onClick={() => changeAudioPause(true)} className={classNames({"hidden": audioPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+            <FaMicrophone />
+          </div>
+          <div onClick={() => changeAudioPause(false)} className={classNames({"hidden": !audioPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+            <FaMicrophoneSlash />
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col h-full">
         <div className="z-10 flex flex-row justify-center items-center bg-stone-900 border-b pb-4 h-8">
           <div className="text-white mt-3 text-sm">SIMPLE WEB MEET</div>
