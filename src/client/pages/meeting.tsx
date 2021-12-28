@@ -9,10 +9,7 @@ import {
 } from 'mediasoup-client/lib/types';
 import {useSelector, useDispatch} from 'react-redux';
 import {store} from '../lib/store';
-import {
-  addParticipant,
-  removeParticipant,
-} from '../lib/messageSlice';
+import {addParticipant, removeParticipant} from '../lib/messageSlice';
 import {RootState} from '../lib/store';
 import {useParams} from 'react-router-dom';
 

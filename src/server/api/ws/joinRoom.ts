@@ -106,7 +106,7 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
                 };
                 const buf = Buffer.from(JSON.stringify(ps), 'utf8');
                 const ahas = toArrayBuffer(buf);
-                media.wsApp?.publish(roomName, ahas, true);
+                media.wsApp?.publish(roomName, ahas);
               }
             }
           }
