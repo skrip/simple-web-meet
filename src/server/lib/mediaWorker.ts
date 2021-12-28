@@ -3,6 +3,7 @@ import {
   Worker,
   Router,
   AudioLevelObserver,
+  ActiveSpeakerObserver,
   WebRtcTransport,
   Producer,
   Consumer,
@@ -30,6 +31,7 @@ export interface RoomData {
   name: string;
   mediasoupRouter: Router;
   audioLevelObserver: AudioLevelObserver;
+  activeSpeakerObserver: ActiveSpeakerObserver;
   client: Map<string, ClientData>;
 }
 

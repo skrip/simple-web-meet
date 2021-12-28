@@ -33,12 +33,21 @@ const createRooms = async (
     threshold: -80,
     interval: 800,
   });
+  audioLevelObserver.on('volumes', (/*volumes*/) => {
+    //console.log('audioLevelObserver on Volumes ', volumes);
+  });
+  const activeSpeakerObserver =
+    await mediasoupRouter.createActiveSpeakerObserver();
+  activeSpeakerObserver.on('dominantspeaker', dominantSpeaker => {
+    console.log('activeSpeakerObserver on dominantspeaker ', dominantSpeaker);
+  });
 
   const client: Map<string, ClientData> = new Map();
   const roomData: RoomData = {
     name: roomName,
     mediasoupRouter: mediasoupRouter,
     audioLevelObserver: audioLevelObserver,
+    activeSpeakerObserver: activeSpeakerObserver,
     client: client,
   };
   rooms.set(roomName, roomData);

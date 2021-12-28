@@ -76,8 +76,8 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
       threshold: -80,
       interval: 800,
     });
-    audioLevelObserver.on('volumes', volumes => {
-      console.log('audioLevelObserver on Volumes ', volumes);
+    audioLevelObserver.on('volumes', (/*volumes*/) => {
+      //console.log('audioLevelObserver on Volumes ', volumes);
     });
     const activeSpeakerObserver =
       await mediasoupRouter.createActiveSpeakerObserver();
@@ -99,6 +99,7 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
       name: roomName,
       mediasoupRouter: mediasoupRouter,
       audioLevelObserver: audioLevelObserver,
+      activeSpeakerObserver: activeSpeakerObserver,
       client: client,
     };
     rooms.set(roomName, roomData);

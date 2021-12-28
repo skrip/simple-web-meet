@@ -1,5 +1,8 @@
 import {WsServe, MediaWorker, toArrayBuffer} from '../../lib';
-import {ProducerOptions} from 'mediasoup/node/lib/types';
+import {
+  ProducerOptions,
+  RtpObserverAddRemoveProducerOptions,
+} from 'mediasoup/node/lib/types';
 
 const produce: WsServe = (ws, message, isBinary) => {
   const media = MediaWorker.getInstance();
@@ -49,6 +52,14 @@ const produce: WsServe = (ws, message, isBinary) => {
               rtpParameters,
             });
             cldata.producer_audio = producer_audio;
+            if (producer_audio?.id) {
+              const opt: RtpObserverAddRemoveProducerOptions = {
+                producerId: producer_audio?.id,
+              };
+              await room?.audioLevelObserver.addProducer(opt);
+              await room?.activeSpeakerObserver.addProducer(opt);
+            }
+            
             producerId = producer_audio?.id as string;
             const ps = {
               method: message.method,
