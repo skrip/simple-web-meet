@@ -9,7 +9,11 @@ import {
 } from 'mediasoup-client/lib/types';
 import {useSelector, useDispatch} from 'react-redux';
 import {store} from '../lib/store';
-import {addParticipant, removeParticipant} from '../lib/messageSlice';
+import {
+  addParticipant,
+  removeParticipant,
+  updateOwner,
+} from '../lib/messageSlice';
 import {RootState} from '../lib/store';
 import {useParams} from 'react-router-dom';
 
@@ -35,6 +39,8 @@ export function Meeting() {
   const [client, setClient] = useState<WebSocket>();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const videoproducer = useRef<HTMLVideoElement>(null!);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const videomain = useRef<HTMLVideoElement>(null!);
 
   const videoconsumers = useRef<(HTMLVideoElement | null)[]>([]);
 
@@ -200,6 +206,9 @@ export function Meeting() {
 
     videoproducer.current.srcObject = localStream;
     videoproducer.current.muted = true;
+
+    videomain.current.srcObject = localStream;
+    videomain.current.muted = true;
 
     client?.send(
       JSON.stringify({
@@ -398,39 +407,62 @@ export function Meeting() {
   }, []);
 
   useEffect(() => {
+    const owner = store.getState().message.owner;
+    if (owner.name === '') {
+      //window.location.href = '/';
+      dispatch(
+        updateOwner({
+          name: 'testing',
+        }),
+      );
+    }
     if (client) {
       proses();
     }
   }, [client]);
 
   return (
-    <div className="flex flex-col p-4">
-      <div className="flex flex-row justify-center border-b pb-4">
-        <div>SIMPLE WEB MEET</div>
+    <div className="flex flex-col justify-between h-screen">
+      <div className="flex flex-col h-auto">
+        <div className="z-10 flex flex-row justify-center items-center bg-stone-900 border-b pb-4 h-8">
+          <div className="text-white mt-3 text-sm">SIMPLE WEB MEET</div>
+        </div>
+
+        <div className="z-0 bg-black flex flex-col justify-center h-full">
+          <video
+            style={{height: '480px'}}
+            className="object-contain"
+            ref={videomain}
+            autoPlay
+            playsInline
+          />
+        </div>
       </div>
 
-      <div className="flex flex-row items-center justify-center p-4">
-        <div className="flex flex-col">
+      <div className="z-10 flex flex-row items-center justify-center bg-stone-900 border-t h-40">
+        <div className="flex flex-col bg-black m-2">
           <video
-            width="200"
+            width="130"
             className="p-2"
             ref={videoproducer}
             autoPlay
             playsInline
           />
-          <div className="text-center text-sm">You</div>
+          <div className="text-center text-xs text-white">You</div>
         </div>
         {participants.map((parti, idx) => {
           return (
-            <div key={idx} className="flex flex-col">
+            <div key={idx} className="flex flex-col bg-black m-2">
               <video
-                width="200"
+                width="130"
                 className="p-2"
                 ref={ref => (videoconsumers.current[idx] = ref)}
                 autoPlay
                 playsInline
               />
-              <div className="text-center text-sm">{parti.participantName}</div>
+              <div className="text-center text-xs text-white">
+                {parti.participantName}
+              </div>
             </div>
           );
         })}

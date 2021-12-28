@@ -76,6 +76,14 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
       threshold: -80,
       interval: 800,
     });
+    audioLevelObserver.on('volumes', volumes => {
+      console.log('audioLevelObserver on Volumes ', volumes);
+    });
+    const activeSpeakerObserver =
+      await mediasoupRouter.createActiveSpeakerObserver();
+    activeSpeakerObserver.on('dominantspeaker', dominantSpeaker => {
+      console.log('activeSpeakerObserver on dominantspeaker ', dominantSpeaker);
+    });
 
     const client: Map<string, ClientData> = new Map();
     const iClientData = {
