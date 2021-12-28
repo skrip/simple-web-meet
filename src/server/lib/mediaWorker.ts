@@ -8,7 +8,7 @@ import {
   Producer,
   Consumer,
 } from 'mediasoup/node/lib/types';
-import {WebSocket} from 'uWebSockets.js';
+import {WebSocket, TemplatedApp} from 'uWebSockets.js';
 
 export interface ConsumerData {
   participantName: string;
@@ -42,11 +42,20 @@ export class MediaWorker {
   readonly numWorkers: number;
   private WsDevices: Map<string, WebSocket> = new Map();
   private rooms: Map<string, RoomData> = new Map();
+  private WsApp: TemplatedApp | null = null;
 
   private constructor() {
     this.numWorkers = 2;
     this.nextMediasoupWorkerIdx = 0;
     this.mediasoupWorkers = [];
+  }
+
+  get wsApp() {
+    return this.WsApp;
+  }
+
+  set wsApp(WsApp) {
+    this.WsApp = WsApp;
   }
 
   get wsDevices() {

@@ -385,6 +385,16 @@ export function Meeting() {
           console.log('client close : ', data);
           const participantName = data.response.participantName as string;
           dispatch(removeParticipant(participantName));
+        } else if (data.method === 'ActiveSpeaker') {
+          const participantName = data.response.participantName as string;
+          const partis = store.getState().message.participant;
+          const member = partis.find(dt => {
+            return dt.participantName == participantName;
+          });
+          if (member) {
+            videomain.current.srcObject = member.remoteStream;
+            videomain.current.muted = true;
+          }
         }
       };
 

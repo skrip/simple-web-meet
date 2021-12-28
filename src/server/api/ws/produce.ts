@@ -59,7 +59,7 @@ const produce: WsServe = (ws, message, isBinary) => {
               await room?.audioLevelObserver.addProducer(opt);
               await room?.activeSpeakerObserver.addProducer(opt);
             }
-            
+
             producerId = producer_audio?.id as string;
             const ps = {
               method: message.method,

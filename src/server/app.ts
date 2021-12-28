@@ -13,6 +13,7 @@ export const wsApp = ws.SSLApp({
 const publicPath = process.cwd() + '/dist/client';
 const serveStatic = serveDir(publicPath);
 const media = MediaWorker.getInstance();
+media.wsApp = wsApp;
 
 import joinRoom = require('./api/ws/joinRoom');
 import getRouteCapability = require('./api/ws/getRouteCapability');
