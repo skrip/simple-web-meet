@@ -386,6 +386,7 @@ export function Meeting() {
           const participantName = data.response.participantName as string;
           dispatch(removeParticipant(participantName));
         } else if (data.method === 'ActiveSpeaker') {
+          console.log('SET SPEAKER ', data);
           const participantName = data.response.participantName as string;
           const partis = store.getState().message.participant;
           const member = partis.find(dt => {
@@ -419,12 +420,12 @@ export function Meeting() {
   useEffect(() => {
     const owner = store.getState().message.owner;
     if (owner.name === '') {
-      //window.location.href = '/';
-      dispatch(
+      window.location.href = '/';
+      /*dispatch(
         updateOwner({
           name: 'testing',
         }),
-      );
+      );*/
     }
     if (client) {
       proses();

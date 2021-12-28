@@ -45,8 +45,11 @@ const createRooms = async (
   const activeSpeakerObserver =
     await mediasoupRouter.createActiveSpeakerObserver();
   activeSpeakerObserver.on('dominantspeaker', dominantSpeaker => {
-    console.log('activeSpeakerObserver on dominantspeaker ', dominantSpeaker);
-    const producer = dominantSpeaker as Producer;
+    interface DominantSpeaker {
+        producer: Producer;
+    }
+    const dS = dominantSpeaker as DominantSpeaker;
+    console.log('activeSpeakerObserver on dominantspeaker ', dS.producer.id);
     const media = MediaWorker.getInstance();
     const rooms = media.Rooms;
     for (const [, /*key*/ value] of rooms) {
@@ -55,7 +58,7 @@ const createRooms = async (
         const arrcons = value2.consumer_transports;
         for (let i = 0; i < arrcons.length; i++) {
           for (let x = 0; x < arrcons[i].consumer_audio.length; x++) {
-            if (arrcons[i].consumer_audio[x].producerId == producer.id) {
+            if (arrcons[i].consumer_audio[x].producerId == dS.producer.id) {
               const participantName = arrcons[i].participantName;
               const roomName = value.name;
               const ps = {
