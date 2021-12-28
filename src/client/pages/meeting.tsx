@@ -394,7 +394,7 @@ export function Meeting() {
             videomain.current.muted = true;
           } else {
             const owner = store.getState().message.owner;
-            if(owner.name == participantName) {
+            if (owner.name == participantName) {
               videomain.current.srcObject = localStream;
               videomain.current.muted = true;
             }
@@ -437,7 +437,7 @@ export function Meeting() {
 
   return (
     <div className="flex flex-col justify-between h-screen">
-      <div className="flex flex-col h-auto">
+      <div className="flex flex-col h-full">
         <div className="z-10 flex flex-row justify-center items-center bg-stone-900 border-b pb-4 h-8">
           <div className="text-white mt-3 text-sm">SIMPLE WEB MEET</div>
         </div>
