@@ -12,7 +12,6 @@ import {store} from '../lib/store';
 import {
   addParticipant,
   removeParticipant,
-  updateOwner,
 } from '../lib/messageSlice';
 import {RootState} from '../lib/store';
 import {useParams} from 'react-router-dom';

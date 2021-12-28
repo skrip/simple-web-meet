@@ -46,7 +46,7 @@ const createRooms = async (
     await mediasoupRouter.createActiveSpeakerObserver();
   activeSpeakerObserver.on('dominantspeaker', dominantSpeaker => {
     interface DominantSpeaker {
-        producer: Producer;
+      producer: Producer;
     }
     const dS = dominantSpeaker as DominantSpeaker;
     console.log('activeSpeakerObserver on dominantspeaker ', dS.producer.id);

@@ -84,34 +84,34 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
     activeSpeakerObserver.on('dominantspeaker', dominantSpeaker => {
       interface DominantSpeaker {
         producer: Producer;
-    }
-    const dS = dominantSpeaker as DominantSpeaker;
-    console.log('activeSpeakerObserver on dominantspeaker ', dS.producer.id);
-    const media = MediaWorker.getInstance();
-    const rooms = media.Rooms;
-    for (const [, /*key*/ value] of rooms) {
-      const clients = value.client;
-      for (const [, /*key2*/ value2] of clients) {
-        const arrcons = value2.consumer_transports;
-        for (let i = 0; i < arrcons.length; i++) {
-          for (let x = 0; x < arrcons[i].consumer_audio.length; x++) {
-            if (arrcons[i].consumer_audio[x].producerId == dS.producer.id) {
-              const participantName = arrcons[i].participantName;
-              const roomName = value.name;
-              const ps = {
-                method: 'ActiveSpeaker',
-                response: {
-                  participantName: participantName,
-                },
-              };
-              const buf = Buffer.from(JSON.stringify(ps), 'utf8');
-              const ahas = toArrayBuffer(buf);
-              media.wsApp?.publish(roomName, ahas, true);
+      }
+      const dS = dominantSpeaker as DominantSpeaker;
+      console.log('activeSpeakerObserver on dominantspeaker ', dS.producer.id);
+      const media = MediaWorker.getInstance();
+      const rooms = media.Rooms;
+      for (const [, /*key*/ value] of rooms) {
+        const clients = value.client;
+        for (const [, /*key2*/ value2] of clients) {
+          const arrcons = value2.consumer_transports;
+          for (let i = 0; i < arrcons.length; i++) {
+            for (let x = 0; x < arrcons[i].consumer_audio.length; x++) {
+              if (arrcons[i].consumer_audio[x].producerId == dS.producer.id) {
+                const participantName = arrcons[i].participantName;
+                const roomName = value.name;
+                const ps = {
+                  method: 'ActiveSpeaker',
+                  response: {
+                    participantName: participantName,
+                  },
+                };
+                const buf = Buffer.from(JSON.stringify(ps), 'utf8');
+                const ahas = toArrayBuffer(buf);
+                media.wsApp?.publish(roomName, ahas, true);
+              }
             }
           }
         }
       }
-    }
     });
 
     const client: Map<string, ClientData> = new Map();
