@@ -22,6 +22,7 @@ export interface Message {
 }
 
 const device = new Device();
+let localStream: MediaStream;
 
 export function Meeting() {
   const participants = useSelector(
@@ -180,7 +181,7 @@ export function Meeting() {
           break;
       }
     });
-    const localStream = await navigator.mediaDevices.getUserMedia({
+    localStream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true,
     });
@@ -391,6 +392,12 @@ export function Meeting() {
           if (member) {
             videomain.current.srcObject = member.remoteStream;
             videomain.current.muted = true;
+          } else {
+            const owner = store.getState().message.owner;
+            if(owner.name == participantName) {
+              videomain.current.srcObject = localStream;
+              videomain.current.muted = true;
+            }
           }
         }
       };
