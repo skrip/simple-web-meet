@@ -11,7 +11,7 @@ import {useSelector, useDispatch} from 'react-redux';
 import {store} from '../lib/store';
 import {addParticipant, removeParticipant} from '../lib/messageSlice';
 import {RootState} from '../lib/store';
-import {useParams, useNavigate} from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import {
   FaMicrophone,
   FaMicrophoneSlash,
@@ -38,8 +38,7 @@ export function Meeting() {
     (state: RootState) => state.message.participant,
   );
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  let [isBlocking, setIsBlocking] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
 
   const params = useParams();
 
@@ -277,7 +276,6 @@ export function Meeting() {
       client.onmessage = async message => {
         const data: Message = JSON.parse(message.data as string) as Message;
         if (data.method === 'LOGIN') {
-
           const owner = store.getState().message.owner;
           client?.send(
             JSON.stringify({
@@ -415,20 +413,20 @@ export function Meeting() {
   const onUnload = (e: BeforeUnloadEvent) => {
     e.preventDefault();
     e.returnValue = 'Are you sure you want to exit?';
-  }
+  };
 
   const onBackButtonEvent = (e: PopStateEvent) => {
     e.preventDefault();
     if (!isBlocking) {
-       if (window.confirm("Do you want to go back ?")) {
-          setIsBlocking(true)
-          window.location.href = '/';
-       } else {
-          window.history.pushState(null, '', window.location.pathname);
-          setIsBlocking(false)
-       }
+      if (window.confirm('Do you want to go back ?')) {
+        setIsBlocking(true);
+        window.location.href = '/';
+      } else {
+        window.history.pushState(null, '', window.location.pathname);
+        setIsBlocking(false);
+      }
     }
- }
+  };
 
   useEffect(() => {
     const owner = store.getState().message.owner;
@@ -440,11 +438,10 @@ export function Meeting() {
         }),
       );*/
     }
-    window.addEventListener("beforeunload", onUnload, {capture: true});
+    window.addEventListener('beforeunload', onUnload, {capture: true});
 
     window.history.pushState(null, '', window.location.pathname);
     window.addEventListener('popstate', onBackButtonEvent);
-   
 
     if (client) {
       proses();
@@ -453,7 +450,6 @@ export function Meeting() {
     return () => {
       window.removeEventListener('popstate', onBackButtonEvent);
     };
-
   }, [client]);
 
   const changeAudioPause = (pause: boolean) => {
@@ -553,7 +549,6 @@ export function Meeting() {
           );
         })}
       </div>
-
     </div>
   );
 }
