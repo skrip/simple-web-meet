@@ -23,7 +23,7 @@ export function Badge(props: BadgeProps) {
   return (
     <div
       onClick={onClick}
-      className={`inline-flex items-center justify-center px-2 py-1 mr-2 text-xs font-bold leading-none text-red-100 bg-blue-600 rounded-full ${className}`}
+      className={`inline-flex items-center justify-center lg:px-2 px-4 lg:py-1 py-2 mr-2 lg:text-xs text-4xl font-bold leading-none text-red-100 bg-blue-600 rounded-full ${className}`}
     >
       {props.title}
     </div>
