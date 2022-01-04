@@ -7,6 +7,10 @@ import {
 } from '../../lib';
 import {RtpCodecCapability, Worker, Producer} from 'mediasoup/node/lib/types';
 
+interface RoomList {
+  name: string;
+  jumlah: number;
+}
 const createRooms = async (
   roomName: string,
   mediasoupWorker: Worker,
@@ -103,9 +107,13 @@ const getRooms: HttpServe = async res => {
     await createRooms('Room 1', mediasoupWorker, rooms);
   }
 
-  const arr: Array<string> = [];
+  const arr: Array<RoomList> = [];
   rooms?.forEach(value => {
-    arr.push(value.name);
+    const p = {
+      name: value.name,
+      jumlah: value.client.size,
+    };
+    arr.push(p);
   });
 
   res.writeStatus('200 OK');

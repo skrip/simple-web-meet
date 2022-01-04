@@ -12,7 +12,12 @@ import {store} from '../lib/store';
 import {addParticipant, removeParticipant} from '../lib/messageSlice';
 import {RootState} from '../lib/store';
 import {useParams} from 'react-router-dom';
-import {FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash} from 'react-icons/fa';
+import {
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaVideo,
+  FaVideoSlash,
+} from 'react-icons/fa';
 import classNames from 'classnames';
 
 export interface Message {
@@ -45,7 +50,7 @@ export function Meeting() {
 
   const videoconsumers = useRef<(HTMLVideoElement | null)[]>([]);
   const [audioPause, setAudioPause] = useState<boolean>(false);
-  const [videoPause, setVideoPause] = useState<boolean>(false)
+  const [videoPause, setVideoPause] = useState<boolean>(false);
 
   const createConsumerTransport = (
     data: TransportOptions,
@@ -444,28 +449,51 @@ export function Meeting() {
   const changeAudioPause = (pause: boolean) => {
     audioTrack.enabled = !pause;
     setAudioPause(pause);
-  }
+  };
 
   const changeVideoPause = (pause: boolean) => {
     webcamTrack.enabled = !pause;
     setVideoPause(pause);
-  }
+  };
 
   return (
     <div className="flex flex-col justify-between h-screen relative">
-      
       <div className="absolute bottom-0 left-0 bg-orange-700 z-20 ml-4 mb-8 rounded-lg">
         <div className="flex flex-col p-1">
-          <div onClick={() => changeVideoPause(true)} className={classNames({"hidden": videoPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+          <div
+            onClick={() => changeVideoPause(true)}
+            className={classNames(
+              {hidden: videoPause},
+              'text-white p-2 hover:bg-orange-600 cursor-pointer',
+            )}
+          >
             <FaVideo />
           </div>
-          <div onClick={() => changeVideoPause(false)} className={classNames({"hidden": !videoPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+          <div
+            onClick={() => changeVideoPause(false)}
+            className={classNames(
+              {hidden: !videoPause},
+              'text-white p-2 hover:bg-orange-600 cursor-pointer',
+            )}
+          >
             <FaVideoSlash />
           </div>
-          <div onClick={() => changeAudioPause(true)} className={classNames({"hidden": audioPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+          <div
+            onClick={() => changeAudioPause(true)}
+            className={classNames(
+              {hidden: audioPause},
+              'text-white p-2 hover:bg-orange-600 cursor-pointer',
+            )}
+          >
             <FaMicrophone />
           </div>
-          <div onClick={() => changeAudioPause(false)} className={classNames({"hidden": !audioPause}, "text-white p-2 hover:bg-orange-600 cursor-pointer")}>
+          <div
+            onClick={() => changeAudioPause(false)}
+            className={classNames(
+              {hidden: !audioPause},
+              'text-white p-2 hover:bg-orange-600 cursor-pointer',
+            )}
+          >
             <FaMicrophoneSlash />
           </div>
         </div>

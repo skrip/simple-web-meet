@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {Button, Input} from '../components';
+import {Button, Input, Badge} from '../components';
 import {useNavigate} from 'react-router-dom';
 import Joi from 'joi';
 import {useDispatch} from 'react-redux';
@@ -7,9 +7,14 @@ import {updateOwner} from '../lib/messageSlice';
 import superagent from 'superagent';
 import classNames from 'classnames';
 
+interface RoomList {
+  name: string;
+  jumlah: number;
+}
+
 export interface ResultRooms {
   method: number;
-  data: Array<string>;
+  data: Array<RoomList>;
 }
 
 export function Home() {
@@ -17,7 +22,7 @@ export function Home() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [rooms, setRooms] = useState<Array<string>>([]);
+  const [rooms, setRooms] = useState<Array<RoomList>>([]);
   const [form, setForm] = useState({
     name: {
       value: '',
@@ -161,13 +166,14 @@ export function Home() {
               return (
                 <div
                   key={idx}
-                  onClick={() => onClickRoom(room)}
+                  onClick={() => onClickRoom(room.name)}
                   className={classNames(
-                    {'bg-gray-100': form.room.value == room},
-                    'p-2 hover:bg-gray-100 text-sm',
+                    {'bg-gray-100': form.room.value == room.name},
+                    'p-2 hover:bg-gray-100 text-sm flex flex-row justify-between cursor-pointer border-b',
                   )}
                 >
-                  {room}
+                  <div>{room.name}</div>
+                  <Badge className="" title={`${room.jumlah}`} />
                 </div>
               );
             })}
@@ -178,7 +184,7 @@ export function Home() {
             <div className="text-4xl mb-8 text-center">Video Meetings</div>
             <div className="flex flex-col justify-start w-64 border-b mb-2">
               <div className="text-xs">room :</div>
-              <div>
+              <div className="text-gray-600">
                 {form.room.value ? form.room.value : 'Please Select Room'}
               </div>
             </div>
