@@ -159,7 +159,9 @@ export function Home() {
         <div className="flex flex-col border-r dark:border-gray-600 lg:w-64 w-full lg:p-1 p-8">
           <div className="flex flex-col p-2 lg:text-xs text-2xl  border-b dark:border-gray-600">
             <div className="lg:text-lg text-5xl">Room Available</div>
-            <div className="lg:text-xs text-4xl text-gray-400 dark:text-gray-100 mt-1">Please Select</div>
+            <div className="lg:text-xs text-4xl text-gray-400 dark:text-gray-100 mt-1">
+              Please Select
+            </div>
           </div>
           <div className="flex flex-col">
             {rooms.map((room, idx) => {
@@ -168,7 +170,10 @@ export function Home() {
                   key={idx}
                   onClick={() => onClickRoom(room.name)}
                   className={classNames(
-                    {'bg-gray-100 dark:bg-gray-500': form.room.value == room.name},
+                    {
+                      'bg-gray-100 dark:bg-gray-500':
+                        form.room.value == room.name,
+                    },
                     'lg:p-2 p-4 lg:m-0 m-4 hover:bg-gray-100 dark:hover:bg-gray-500 flex flex-row justify-between cursor-pointer border-b dark:border-gray-600',
                   )}
                 >
@@ -181,7 +186,9 @@ export function Home() {
         </div>
         <div className="flex flex-col items-center justify-center w-full p-4 lg:mt-0 mt-8">
           <div className="flex flex-col items-center ld:w-1/2 w-full p-4">
-            <div className="lg:text-3xl text-6xl mb-8 text-center">Video Meetings</div>
+            <div className="lg:text-3xl text-6xl mb-8 text-center">
+              Video Meetings
+            </div>
             <div className="flex flex-col justify-start lg:w-64 w-full border-b mb-2">
               <div className="lg:text-xs text-5xl">room :</div>
               <div className="lg:mt-1 mt-8 lg:mb-1 mb-4 lg:text-base text-5xl dark:text-gray-100 text-gray-600">

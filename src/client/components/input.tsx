@@ -73,7 +73,9 @@ export function Input(props: InputProps) {
   return (
     <div className="form m-2 lg:w-64 w-full lg:mt-2 mt-8 lg:mb-2 mb-4">
       <label className="block">
-        <span className="lg:mt-0 mt-8 lg:mb-0 mb-4 block lg:text-sm text-5xl font-medium text-gray-700 dark:text-gray-100">{title}</span>
+        <span className="lg:mt-0 mt-8 lg:mb-0 mb-4 block lg:text-sm text-5xl font-medium text-gray-700 dark:text-gray-100">
+          {title}
+        </span>
         <input
           required={error}
           disabled={disable}

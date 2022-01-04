@@ -11,7 +11,7 @@ import {useSelector, useDispatch} from 'react-redux';
 import {store} from '../lib/store';
 import {addParticipant, removeParticipant} from '../lib/messageSlice';
 import {RootState} from '../lib/store';
-import {useParams} from 'react-router-dom';
+import {useParams, useNavigate} from 'react-router-dom';
 import {
   FaMicrophone,
   FaMicrophoneSlash,
@@ -38,6 +38,8 @@ export function Meeting() {
     (state: RootState) => state.message.participant,
   );
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  let [isBlocking, setIsBlocking] = useState(false);
 
   const params = useParams();
 
@@ -61,12 +63,10 @@ export function Meeting() {
       return dt.participantName == participantName;
     });
     if (member) {
-      console.error('member sudah ada ', participantName);
       return;
     }
 
     const consumerTransport = device?.createRecvTransport(data);
-    console.log('buat createConsumerTransport ', consumerTransport);
     consumerTransport?.on(
       'connect',
       ({dtlsParameters}, callback: () => void) => {
@@ -81,18 +81,16 @@ export function Meeting() {
           }),
         );
         callback();
-        console.log('kirim connect ConsumerTransport');
       },
     );
 
     consumerTransport?.on('connectionstatechange', state => {
       switch (state) {
         case 'connecting':
-          console.log('connecting consumer');
+          console.log('consumer connecting');
           break;
 
         case 'connected':
-          console.log('connected consumer resume');
           client?.send(
             JSON.stringify({
               method: 'resume',
@@ -104,7 +102,7 @@ export function Meeting() {
           break;
 
         case 'failed':
-          console.log('failed consumer');
+          console.log('consumer failed');
           consumerTransport?.close();
           break;
 
@@ -133,8 +131,6 @@ export function Meeting() {
 
   const createTransport = async (data: TransportOptions) => {
     const sendTransport = device?.createSendTransport(data);
-    console.log('masuk ke sendTransport device ', device);
-    console.log('masuk ke sendTransport ', sendTransport);
 
     sendTransport?.on('connect', ({dtlsParameters}, callback: () => void) => {
       const ddtlsParameters = dtlsParameters as DtlsParameters;
@@ -148,7 +144,6 @@ export function Meeting() {
         }),
       );
       callback();
-      console.log('kirim connectProducerTransport ');
     });
 
     sendTransport?.on(
@@ -171,7 +166,6 @@ export function Meeting() {
 
         const id = sendTransport?.id;
         callback({id});
-        console.log('kirim produce ', kind);
       },
     );
 
@@ -241,7 +235,6 @@ export function Meeting() {
       const remoteStream = member.remoteStream;
       const consumerTransport = member.transport;
       const videoconsumer = videoconsumers.current[member.no - 1];
-      console.log(' videoconsumer ', videoconsumer);
       if (videoconsumer) {
         videoconsumer.srcObject = remoteStream;
         const dt = data.response.transport as ConsumerOptions;
@@ -257,7 +250,6 @@ export function Meeting() {
           track.onunmute = () => {
             console.log('track on unmute');
           };
-          console.log('TRACK ', track);
           remoteStream.addTrack(track);
         } catch (error) {
           console.error('error video ', error);
@@ -269,7 +261,6 @@ export function Meeting() {
   const proses = () => {
     if (client) {
       if (client.readyState == 1) {
-        console.log('ready state');
         client.send(
           JSON.stringify({
             method: 'LOGIN',
@@ -282,15 +273,12 @@ export function Meeting() {
             method: 'LOGIN',
           }),
         );
-        console.log('WebSocket Client Connected and send');
       };
       client.onmessage = async message => {
         const data: Message = JSON.parse(message.data as string) as Message;
         if (data.method === 'LOGIN') {
-          console.log('response LOGIN ', data.response);
 
           const owner = store.getState().message.owner;
-          console.log('=== owner ', owner);
           client?.send(
             JSON.stringify({
               method: 'joinRoom',
@@ -310,7 +298,6 @@ export function Meeting() {
           }
         } else if (data.method === 'getRouteCapability') {
           if (data.response.result == 200) {
-            console.log('getRouteCapability ', device);
             const routerRtpCapabilities = data.response
               .rtpCapabilities as RtpCapabilities;
             try {
@@ -329,7 +316,6 @@ export function Meeting() {
           }
         } else if (data.method === 'createTransport') {
           if (data.response.result == 200) {
-            console.log(data.response);
             const lcreateTransport = data.response
               .createTransport as TransportOptions;
             const participantName = data.response.participantName as string;
@@ -342,7 +328,6 @@ export function Meeting() {
         } else if (data.method === 'new_producer_transport') {
           if (data.response.participantName) {
             const participantName = data.response.participantName as string;
-            console.log(data.response);
             const partis = store.getState().message.participant;
             const member = partis.find(dt => {
               return dt.participantName == participantName;
@@ -364,7 +349,6 @@ export function Meeting() {
             }
           }
         } else if (data.method === 'new_producer') {
-          console.log('ADA NEW PRODUCER ', data.response);
           const participantName = data.response.participantName as string;
           const producerId = data.response.producerId as string;
           const kind = data.response.kind as string;
@@ -374,7 +358,6 @@ export function Meeting() {
           });
           if (member) {
             const rtpCapabilities = device?.rtpCapabilities;
-            console.log('masuk siniiiii ConsumerTransport ');
             client?.send(
               JSON.stringify({
                 method: 'consume',
@@ -390,11 +373,9 @@ export function Meeting() {
         } else if (data.method === 'consume') {
           await consume(data);
         } else if (data.method === 'clientClose') {
-          console.log('client close : ', data);
           const participantName = data.response.participantName as string;
           dispatch(removeParticipant(participantName));
         } else if (data.method === 'ActiveSpeaker') {
-          console.log('SET SPEAKER ', data);
           const participantName = data.response.participantName as string;
           const partis = store.getState().message.participant;
           const member = partis.find(dt => {
@@ -431,6 +412,24 @@ export function Meeting() {
     setClient(cl);
   }, []);
 
+  const onUnload = (e: BeforeUnloadEvent) => {
+    e.preventDefault();
+    e.returnValue = 'Are you sure you want to exit?';
+  }
+
+  const onBackButtonEvent = (e: PopStateEvent) => {
+    e.preventDefault();
+    if (!isBlocking) {
+       if (window.confirm("Do you want to go back ?")) {
+          setIsBlocking(true)
+          window.location.href = '/';
+       } else {
+          window.history.pushState(null, '', window.location.pathname);
+          setIsBlocking(false)
+       }
+    }
+ }
+
   useEffect(() => {
     const owner = store.getState().message.owner;
     if (owner.name === '') {
@@ -441,9 +440,20 @@ export function Meeting() {
         }),
       );*/
     }
+    window.addEventListener("beforeunload", onUnload, {capture: true});
+
+    window.history.pushState(null, '', window.location.pathname);
+    window.addEventListener('popstate', onBackButtonEvent);
+   
+
     if (client) {
       proses();
     }
+
+    return () => {
+      window.removeEventListener('popstate', onBackButtonEvent);
+    };
+
   }, [client]);
 
   const changeAudioPause = (pause: boolean) => {
@@ -543,6 +553,7 @@ export function Meeting() {
           );
         })}
       </div>
+
     </div>
   );
 }
