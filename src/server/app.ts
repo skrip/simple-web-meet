@@ -24,6 +24,7 @@ import consume = require('./api/ws/consume');
 import connectConsumerTransport = require('./api/ws/connectConsumerTransport');
 import resume = require('./api/ws/resume');
 import getRoomProducers = require('./api/ws/getRoomProducers');
+import closeScreenShare = require('./api/ws/closeScreenShare');
 
 wsApp.ws('/websocket', {
   idleTimeout: 4 * 10,
@@ -112,6 +113,32 @@ wsApp.ws('/websocket', {
                           console.log(
                             'consumer_audio hapus ',
                             producer_audio.id,
+                          );
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            if (cl?.producer_screen_share) {
+              const producer_screen_share = cl?.producer_screen_share;
+              for (const [key, value] of clients) {
+                if (key !== id) {
+                  const arrcons = value.consumer_transports;
+                  for (let i = 0; i < arrcons.length; i++) {
+                    const consumer_data = arrcons[i].consumer_screen_share;
+                    if (consumer_data) {
+                      let i = consumer_data.length;
+                      while (i--) {
+                        if (
+                          consumer_data[i].producerId ==
+                          producer_screen_share.id
+                        ) {
+                          consumer_data.splice(i, 1);
+                          console.log(
+                            'consumer_screen_share hapus ',
+                            producer_screen_share.id,
                           );
                         }
                       }
@@ -247,6 +274,13 @@ wsApp.ws('/websocket', {
       } else {
         console.log('getRoomProducers ', ws.id);
         getRoomProducers(ws, msgo, isBinary);
+      }
+    } else if (msgo.method == 'closeScreenShare') {
+      if (!ws.id) {
+        console.log('belum punya ID');
+      } else {
+        console.log('closeScreenShare ', ws.id);
+        closeScreenShare(ws, msgo, isBinary);
       }
     }
   },

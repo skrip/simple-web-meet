@@ -12,6 +12,7 @@ const resume: WsServe = (ws, message, isBinary) => {
       const room = rooms.get(t);
       const id = ws.id as string;
       const cldata = room?.client?.get(id);
+      const type = message.data.type as string;
       if (cldata) {
         const arrcons = cldata?.consumer_transports;
         const cons = arrcons?.find(con => {
@@ -19,16 +20,27 @@ const resume: WsServe = (ws, message, isBinary) => {
         });
 
         if (cons) {
-          const consumer_video = cons.consumer_video;
-          const consumer_audio = cons.consumer_audio;
-          consumer_video.map(async con => {
-            console.log('consumer on resume producerId === ', con.producerId);
-            await con.resume();
-          });
-          consumer_audio.map(async con => {
-            console.log('consumer on resume producerId === ', con.producerId);
-            await con.resume();
-          });
+          if (type === 'screen_share') {
+            const consumer_screen_share = cons.consumer_screen_share;
+            consumer_screen_share.map(async con => {
+              console.log(
+                'consumer screen_share on resume producerId === ',
+                con.producerId,
+              );
+              await con.resume();
+            });
+          } else {
+            const consumer_video = cons.consumer_video;
+            const consumer_audio = cons.consumer_audio;
+            consumer_video.map(async con => {
+              console.log('consumer on resume producerId === ', con.producerId);
+              await con.resume();
+            });
+            consumer_audio.map(async con => {
+              console.log('consumer on resume producerId === ', con.producerId);
+              await con.resume();
+            });
+          }
         }
       } else {
         console.error('cldata not found');

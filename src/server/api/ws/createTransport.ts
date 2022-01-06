@@ -134,6 +134,7 @@ const createTransport: WsServe = (ws, message, isBinary) => {
                   participantName: participantName,
                   consumer_transport: transport,
                   consumer_video: [],
+                  consumer_screen_share: [],
                   consumer_audio: [],
                   consumer_data: [],
                 };

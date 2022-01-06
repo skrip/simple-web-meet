@@ -6,10 +6,15 @@ import {
   ConsumerOptions,
   DtlsParameters,
   RtpParameters,
+  Transport,
 } from 'mediasoup-client/lib/types';
 import {useSelector, useDispatch} from 'react-redux';
 import {store} from '../lib/store';
-import {addParticipant, removeParticipant} from '../lib/messageSlice';
+import {
+  addParticipant,
+  removeParticipant,
+  updateParticipantIsScreenShare,
+} from '../lib/messageSlice';
 import {RootState} from '../lib/store';
 import {useParams} from 'react-router-dom';
 import {
@@ -18,6 +23,7 @@ import {
   FaVideo,
   FaVideoSlash,
 } from 'react-icons/fa';
+import {MdScreenShare, MdStopScreenShare} from 'react-icons/md';
 import classNames from 'classnames';
 
 export interface Message {
@@ -30,8 +36,12 @@ export interface Message {
 
 const device = new Device();
 let localStream: MediaStream;
+let screenShareRemoteStream: MediaStream;
+let screenShareStream: MediaStream;
+let screenShareTrack: MediaStreamTrack;
 let webcamTrack: MediaStreamTrack;
 let audioTrack: MediaStreamTrack;
+let sendTransport: Transport;
 
 export function Meeting() {
   const participants = useSelector(
@@ -52,6 +62,7 @@ export function Meeting() {
   const videoconsumers = useRef<(HTMLVideoElement | null)[]>([]);
   const [audioPause, setAudioPause] = useState<boolean>(false);
   const [videoPause, setVideoPause] = useState<boolean>(false);
+  const [screenShare, setScreenShare] = useState<boolean>(false);
 
   const createConsumerTransport = (
     data: TransportOptions,
@@ -90,11 +101,13 @@ export function Meeting() {
           break;
 
         case 'connected':
+          console.log('consumer konekted lagi');
           client?.send(
             JSON.stringify({
               method: 'resume',
               data: {
                 participantName,
+                type: '',
               },
             }),
           );
@@ -124,12 +137,13 @@ export function Meeting() {
         participantName: participantName,
         transport: consumerTransport,
         remoteStream: remoteStream,
+        is_screen_share: false,
       }),
     );
   };
 
   const createTransport = async (data: TransportOptions) => {
-    const sendTransport = device?.createSendTransport(data);
+    sendTransport = device?.createSendTransport(data);
 
     sendTransport?.on('connect', ({dtlsParameters}, callback: () => void) => {
       const ddtlsParameters = dtlsParameters as DtlsParameters;
@@ -185,6 +199,7 @@ export function Meeting() {
           break;
       }
     });
+
     localStream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true,
@@ -197,9 +212,11 @@ export function Meeting() {
         {maxBitrate: 300000},
         {maxBitrate: 900000},
       ],
-      codecOptions: {
-        videoGoogleStartBitrate: 1000,
-      },
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      codec: device.rtpCapabilities.codecs!.find(
+        codec => codec.mimeType.toLowerCase() === 'video/h264',
+      ),
+      appData: {nama: 'satu'},
     });
 
     audioTrack = localStream.getAudioTracks()[0];
@@ -231,15 +248,17 @@ export function Meeting() {
       return dt.participantName == participantName;
     });
     if (member) {
-      const remoteStream = member.remoteStream;
-      const consumerTransport = member.transport;
-      const videoconsumer = videoconsumers.current[member.no - 1];
-      if (videoconsumer) {
-        videoconsumer.srcObject = remoteStream;
+      const type = data.response.type as string;
+      if (type == 'screen_share') {
+        const consumerTransport = member.transport;
         const dt = data.response.transport as ConsumerOptions;
         try {
+          screenShareRemoteStream = new MediaStream();
           const consumer = await consumerTransport?.consume(dt);
           const track: MediaStreamTrack = consumer.track;
+          console.log('consume scren share');
+          videomain.current.srcObject = screenShareRemoteStream;
+
           track.onended = () => {
             console.log('track on ended');
           };
@@ -249,9 +268,50 @@ export function Meeting() {
           track.onunmute = () => {
             console.log('track on unmute');
           };
-          remoteStream.addTrack(track);
+          screenShareRemoteStream.addTrack(track);
+
+          dispatch(
+            updateParticipantIsScreenShare({
+              name: member.participantName,
+              is_screen_share: true,
+            }),
+          );
+
+          client?.send(
+            JSON.stringify({
+              method: 'resume',
+              data: {
+                participantName,
+                type: 'screen_share',
+              },
+            }),
+          );
         } catch (error) {
           console.error('error video ', error);
+        }
+      } else {
+        const remoteStream = member.remoteStream;
+        const consumerTransport = member.transport;
+        const videoconsumer = videoconsumers.current[member.no - 1];
+        if (videoconsumer) {
+          videoconsumer.srcObject = remoteStream;
+          const dt = data.response.transport as ConsumerOptions;
+          try {
+            const consumer = await consumerTransport?.consume(dt);
+            const track: MediaStreamTrack = consumer.track;
+            track.onended = () => {
+              console.log('track on ended');
+            };
+            track.onmute = () => {
+              console.log('track on mute');
+            };
+            track.onunmute = () => {
+              console.log('track on unmute');
+            };
+            remoteStream.addTrack(track);
+          } catch (error) {
+            console.error('error video ', error);
+          }
         }
       }
     }
@@ -350,6 +410,7 @@ export function Meeting() {
           const participantName = data.response.participantName as string;
           const producerId = data.response.producerId as string;
           const kind = data.response.kind as string;
+          const type = data.response.type as string;
           const partis = store.getState().message.participant;
           const member = partis.find(dt => {
             return dt.participantName == data.response.participantName;
@@ -364,6 +425,7 @@ export function Meeting() {
                   participantName: participantName,
                   kind: kind,
                   producerId: producerId,
+                  type: type,
                 },
               }),
             );
@@ -373,6 +435,10 @@ export function Meeting() {
         } else if (data.method === 'clientClose') {
           const participantName = data.response.participantName as string;
           dispatch(removeParticipant(participantName));
+
+          //const owner = store.getState().message.owner;
+          videomain.current.srcObject = localStream;
+          videomain.current.muted = true;
         } else if (data.method === 'ActiveSpeaker') {
           const participantName = data.response.participantName as string;
           const partis = store.getState().message.participant;
@@ -380,14 +446,33 @@ export function Meeting() {
             return dt.participantName == participantName;
           });
           if (member) {
-            videomain.current.srcObject = member.remoteStream;
-            videomain.current.muted = true;
+            if (!member.is_screen_share) {
+              videomain.current.srcObject = member.remoteStream;
+              videomain.current.muted = true;
+            }
           } else {
             const owner = store.getState().message.owner;
             if (owner.name == participantName) {
               videomain.current.srcObject = localStream;
               videomain.current.muted = true;
             }
+          }
+        } else if (data.method === 'closeScreenShare') {
+          console.log('Close Screen Share');
+          const participantName = data.response.participantName as string;
+          const partis = store.getState().message.participant;
+          const member = partis.find(dt => {
+            return dt.participantName == participantName;
+          });
+          if (member) {
+            dispatch(
+              updateParticipantIsScreenShare({
+                name: member.participantName,
+                is_screen_share: false,
+              }),
+            );
+            videomain.current.srcObject = localStream;
+            videomain.current.muted = true;
           }
         }
       };
@@ -462,10 +547,126 @@ export function Meeting() {
     setVideoPause(pause);
   };
 
+  async function startCapture(
+    displayMediaOptions: DisplayMediaStreamConstraints,
+  ): Promise<MediaStream | null> {
+    let captureStream: MediaStream | null = null;
+
+    try {
+      captureStream = await navigator.mediaDevices.getDisplayMedia(
+        displayMediaOptions,
+      );
+    } catch (err) {
+      console.error('Error: ', err);
+    }
+    return captureStream;
+  }
+
+  function stopCapture() {
+    screenShareTrack.stop();
+    videomain.current.srcObject = localStream;
+
+    const owner = store.getState().message.owner;
+    client?.send(
+      JSON.stringify({
+        method: 'closeScreenShare',
+        data: {
+          participantName: owner.name,
+        },
+      }),
+    );
+  }
+
+  function addStreamStopListener(stream: MediaStream, callback: () => void) {
+    stream.addEventListener(
+      'ended',
+      function () {
+        callback();
+      },
+      false,
+    );
+    stream.addEventListener(
+      'inactive',
+      function () {
+        callback();
+      },
+      false,
+    );
+    stream.getTracks().forEach(function (track) {
+      track.addEventListener(
+        'ended',
+        function () {
+          callback();
+        },
+        false,
+      );
+      track.addEventListener(
+        'inactive',
+        function () {
+          callback();
+        },
+        false,
+      );
+    });
+  }
+
+  const changeScreenShare = async (start: boolean) => {
+    if (start) {
+      const captureStream = await startCapture({
+        video: true,
+      });
+      if (captureStream) {
+        screenShareStream = captureStream;
+        screenShareTrack = screenShareStream.getVideoTracks()[0];
+        await sendTransport?.produce({
+          track: screenShareTrack,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          codec: device.rtpCapabilities.codecs!.find(
+            codec => codec.mimeType.toLowerCase() === 'video/vp8',
+          ),
+          appData: {type: 'screen_share'},
+        });
+
+        addStreamStopListener(captureStream, function () {
+          const owner = store.getState().message.owner;
+          client?.send(
+            JSON.stringify({
+              method: 'closeScreenShare',
+              data: {
+                participantName: owner.name,
+              },
+            }),
+          );
+        });
+      }
+    } else {
+      stopCapture();
+    }
+    setScreenShare(start);
+  };
+
   return (
     <div className="flex flex-col justify-between h-screen relative">
       <div className="absolute bottom-0 left-0 bg-orange-700 z-20 ml-4 mb-8 rounded-lg">
         <div className="flex flex-col p-1">
+          <div
+            onClick={() => changeScreenShare(true)}
+            className={classNames(
+              {hidden: screenShare},
+              'text-white p-2 hover:bg-orange-600 cursor-pointer',
+            )}
+          >
+            <MdScreenShare />
+          </div>
+          <div
+            onClick={() => changeScreenShare(false)}
+            className={classNames(
+              {hidden: !screenShare},
+              'text-white p-2 hover:bg-orange-600 cursor-pointer',
+            )}
+          >
+            <MdStopScreenShare />
+          </div>
           <div
             onClick={() => changeVideoPause(true)}
             className={classNames(

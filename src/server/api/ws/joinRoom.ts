@@ -31,6 +31,7 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
       producer_transport: undefined,
       consumer_transports: [],
       producer_video: undefined,
+      producer_screen_share: undefined,
       producer_audio: undefined,
       producer_data: undefined,
     };
@@ -62,6 +63,16 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
         clockRate: 90000,
         parameters: {
           'x-google-start-bitrate': 1000,
+        },
+      },
+      {
+        kind: 'video',
+        mimeType: 'video/h264',
+        clockRate: 90000,
+        parameters: {
+          'packetization-mode': 1,
+          'profile-level-id': '42e01f',
+          'level-asymmetry-allowed': 1,
         },
       },
     ];
@@ -120,6 +131,7 @@ const joinRoom: WsServe = async (ws, message, isBinary) => {
       producer_transport: undefined,
       consumer_transports: [],
       producer_video: undefined,
+      producer_screen_share: undefined,
       producer_audio: undefined,
       producer_data: undefined,
     };

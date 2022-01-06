@@ -4,6 +4,9 @@ import {
   RtpObserverAddRemoveProducerOptions,
 } from 'mediasoup/node/lib/types';
 
+interface appDataType {
+  type: string;
+}
 const produce: WsServe = (ws, message, isBinary) => {
   const media = MediaWorker.getInstance();
   const rooms = media.Rooms;
@@ -15,15 +18,44 @@ const produce: WsServe = (ws, message, isBinary) => {
       isroom = true;
 
       try {
-        const {kind, rtpParameters} = message.data as ProducerOptions;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const {kind, rtpParameters, appData} = message.data as ProducerOptions;
+        const appdata = appData as appDataType;
         const room = rooms.get(t);
         let producerId = '';
         const id = ws.id as string;
-        if (kind == 'video') {
+        let type: string = kind;
+        if (appdata.type) {
+          type = appdata.type;
+        }
+        if (type === 'screen_share') {
           const cldata = room?.client?.get(id);
           if (cldata) {
-            const producer = cldata.producer_transport;
-            const producer_video = await producer?.produce({
+            const transport = cldata.producer_transport;
+            const producer_screen_share = await transport?.produce({
+              kind,
+              rtpParameters,
+            });
+            cldata.producer_screen_share = producer_screen_share;
+            producerId = producer_screen_share?.id as string;
+            const ps = {
+              method: message.method,
+              response: {
+                result: 200,
+                id: producer_screen_share?.id,
+                type: type,
+              },
+            };
+            const buf = Buffer.from(JSON.stringify(ps), 'utf8');
+            const ahas = toArrayBuffer(buf); //hasil
+            ws.send(ahas, isBinary, true);
+            console.log('selesai produce screen share');
+          }
+        } else if (type === 'video') {
+          const cldata = room?.client?.get(id);
+          if (cldata) {
+            const transport = cldata.producer_transport;
+            const producer_video = await transport?.produce({
               kind,
               rtpParameters,
             });
@@ -34,6 +66,7 @@ const produce: WsServe = (ws, message, isBinary) => {
               response: {
                 result: 200,
                 id: producer_video?.id,
+                type: type,
               },
             };
             const buf = Buffer.from(JSON.stringify(ps), 'utf8');
@@ -43,11 +76,11 @@ const produce: WsServe = (ws, message, isBinary) => {
           } else {
             console.error('cldata not found');
           }
-        } else if (kind == 'audio') {
+        } else if (type === 'audio') {
           const cldata = room?.client?.get(id);
           if (cldata) {
-            const producer = cldata.producer_transport;
-            const producer_audio = await producer?.produce({
+            const transport = cldata.producer_transport;
+            const producer_audio = await transport?.produce({
               kind,
               rtpParameters,
             });
@@ -66,6 +99,7 @@ const produce: WsServe = (ws, message, isBinary) => {
               response: {
                 result: 200,
                 id: producer_audio?.id,
+                type: type,
               },
             };
             const buf = Buffer.from(JSON.stringify(ps), 'utf8');
@@ -85,6 +119,7 @@ const produce: WsServe = (ws, message, isBinary) => {
               participantName: cldata.participantName,
               producerId,
               kind,
+              type: type,
             },
           };
           const buf2 = Buffer.from(JSON.stringify(pps), 'utf8');

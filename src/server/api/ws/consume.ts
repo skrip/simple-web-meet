@@ -100,8 +100,55 @@ const consume: WsServe = (ws, message, isBinary) => {
       const cldata = room?.client?.get(id); // own pengen consume
 
       let hasdata = false;
+      const type = message.data.type as string;
       for (let i = 0; i < tmpdev.length; i++) {
-        if (message.data.kind === 'video') {
+        if (type === 'screen_share') {
+          const producer_screen_share = tmpdev[i].producer_screen_share;
+          if (producer_screen_share) {
+            if (producer_screen_share.id === message.data.producerId) {
+              const arrcons = cldata?.consumer_transports;
+              const cons = arrcons?.find(con => {
+                return con.participantName === message.data.participantName;
+              });
+              if (cons) {
+                const rtpCapabilities = message.data
+                  .rtpCapabilities as RtpCapabilities;
+                const d = await createConsumer(
+                  mediasoupRouter,
+                  cons.consumer_transport,
+                  producer_screen_share,
+                  rtpCapabilities,
+                );
+                if (d) {
+                  let ada = false;
+                  for (let x = 0; x < cons.consumer_screen_share.length; x++) {
+                    if (
+                      cons.consumer_screen_share[x].producerId ==
+                      d.consumer.producerId
+                    ) {
+                      cons.consumer_screen_share[x] = d.consumer;
+                      ada = true;
+                    }
+                  }
+                  if (!ada) {
+                    cons.consumer_screen_share.push(d.consumer);
+                  }
+                  transport = {
+                    producerId: d.producerId,
+                    id: d.consumer.id,
+                    kind: d.consumer.kind,
+                    rtpParameters: d.consumer.rtpParameters,
+                    type: d.consumer.type,
+                    producerPaused: d.consumer.producerPaused,
+                  };
+                  hasdata = true;
+                }
+              }
+            }
+          } else {
+            console.error('producer_screen_share not found');
+          }
+        } else if (message.data.kind === 'video') {
           const producer_video = tmpdev[i].producer_video;
           if (producer_video) {
             if (producer_video.id === message.data.producerId) {
@@ -202,6 +249,7 @@ const consume: WsServe = (ws, message, isBinary) => {
             result: 200,
             transport: transport,
             participantName,
+            type,
           },
         };
         console.log('PS ', ps);

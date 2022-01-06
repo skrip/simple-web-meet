@@ -7,6 +7,7 @@ export interface Participant {
   participantName: string;
   transport: Transport;
   remoteStream: MediaStream;
+  is_screen_share: boolean;
   //videoref?: HTMLVideoElement | undefined
 }
 export interface Owner {
@@ -23,6 +24,20 @@ export const messageSlice = createSlice({
     owner: initialOwner,
   },
   reducers: {
+    updateParticipantIsScreenShare: (
+      state,
+      action: PayloadAction<{name: string; is_screen_share: boolean}>,
+    ) => {
+      //state.value.unshift(action.payload);
+      state.participant = produce(state.participant, draft => {
+        const i = draft.findIndex(
+          dt => dt.participantName === action.payload.name,
+        );
+        if (i > -1) {
+          draft[i].is_screen_share = action.payload.is_screen_share;
+        }
+      });
+    },
     addParticipant: (state, action: PayloadAction<Participant>) => {
       //state.value.unshift(action.payload);
       state.participant = produce(state.participant, draft => {
@@ -47,7 +62,11 @@ export const messageSlice = createSlice({
   },
 });
 
-export const {addParticipant, removeParticipant, updateOwner} =
-  messageSlice.actions;
+export const {
+  addParticipant,
+  removeParticipant,
+  updateOwner,
+  updateParticipantIsScreenShare,
+} = messageSlice.actions;
 
 export default messageSlice.reducer;

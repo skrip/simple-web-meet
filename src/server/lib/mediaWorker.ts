@@ -14,6 +14,7 @@ export interface ConsumerData {
   participantName: string;
   consumer_transport: WebRtcTransport | undefined;
   consumer_video: Array<Consumer>;
+  consumer_screen_share: Array<Consumer>;
   consumer_audio: Array<Consumer>;
   consumer_data: Array<Consumer>;
 }
@@ -23,6 +24,7 @@ export interface ClientData {
   producer_transport: WebRtcTransport | undefined;
   consumer_transports: Array<ConsumerData>;
   producer_video: Producer | undefined;
+  producer_screen_share: Producer | undefined;
   producer_audio: Producer | undefined;
   producer_data: Producer | undefined;
 }
