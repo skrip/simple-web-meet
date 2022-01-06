@@ -111,7 +111,7 @@ export class MediaWorker {
 
         this.mediasoupWorkers.push(worker);
 
-        setInterval(() => {
+        /*setInterval(() => {
           (async () => {
             const usage = await worker.getResourceUsage();
 
@@ -123,7 +123,7 @@ export class MediaWorker {
           })().catch(err => {
             throw err;
           });
-        }, 120000);
+        }, 120000);*/
       }
     }
   }

@@ -9,7 +9,7 @@
     "build": "tsc && parcel build ./src/client/index.html --dist-dir dist/client",
     "dev:server": "ts-node-dev src/server/app.ts",
     "dev": "concurrently --kill-others \"npm run watch:client\" \"npm run dev:server\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --forceExit",
     "prepare": "husky install"
   },
   "author": "dhani kuswendha",
@@ -35,6 +35,7 @@
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.6.0"
   },
   "devDependencies": {
+    "@types/jest": "^27.4.0",
     "@types/mongodb": "^4.0.7",
     "@types/node": "^17.0.1",
     "@types/react": "^17.0.37",
@@ -42,6 +43,7 @@
     "@types/react-redux": "^7.1.20",
     "@types/superagent": "^4.1.13",
     "@types/uuid": "^8.3.3",
+    "@types/ws": "^8.2.2",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",
     "autoprefixer": "^10.4.0",
@@ -52,11 +54,14 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.27.1",
     "husky": "^7.0.4",
+    "jest": "^27.4.7",
     "parcel": "^2.0.1",
     "postcss": "^8.4.5",
     "prettier": "^2.5.1",
     "tailwindcss": "^3.0.7",
+    "ts-jest": "^27.1.2",
     "ts-node-dev": "^1.1.8",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "ws": "^8.4.0"
   }
 }

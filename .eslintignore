@@ -12,3 +12,4 @@ coverage
 **/out/*
 tailwind.config.js
 postcss.config.js
+jest.config.js
