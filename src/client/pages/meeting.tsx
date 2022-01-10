@@ -638,11 +638,13 @@ export function Meeting() {
             }),
           );
         });
+
+        setScreenShare(start);
       }
     } else {
       stopCapture();
+      setScreenShare(start);
     }
-    setScreenShare(start);
   };
 
   return (
