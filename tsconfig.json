@@ -101,7 +101,8 @@
     "include": ["**/*.ts", "**/*.tsx", "typings/*"],
     "exclude": [
       "dist",
-      "node_modules"
+      "node_modules",
+      "test"
     ]
   }
   

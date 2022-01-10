@@ -1,9 +1,10 @@
 import {WsServe, MediaWorker, toArrayBuffer} from '../../lib';
 import {Router} from 'mediasoup/node/lib/types';
+import {object, string, mixed} from 'yup';
 
-interface createTransportData {
+/*interface createTransportData {
   participantName: string;
-}
+}*/
 
 async function createWebRtcTransport(mediasoupRouter: Router) {
   const {maxIncomingBitrate, initialAvailableOutgoingBitrate} = {
@@ -37,9 +38,9 @@ async function createWebRtcTransport(mediasoupRouter: Router) {
     } catch (error) {}
   }
 
-  console.log('====== transport.id ', transport.id);
-  console.log('====== transport.iceParameters ', transport.iceParameters);
-  console.log('====== transport.sctpParameters ', transport.sctpParameters);
+  //console.log('====== transport.id ', transport.id);
+  //console.log('====== transport.iceParameters ', transport.iceParameters);
+  //console.log('====== transport.sctpParameters ', transport.sctpParameters);
   return {
     transport,
     params: {
@@ -52,129 +53,156 @@ async function createWebRtcTransport(mediasoupRouter: Router) {
   };
 }
 
-const createTransport: WsServe = (ws, message, isBinary) => {
-  const media = MediaWorker.getInstance();
-  const rooms = media.Rooms;
+const createTransport: WsServe = async (ws, message, isBinary) => {
+  const createTransportSchema = object({
+    method: string().required('createTransport').defined(),
+    data: object({
+      type: mixed<string>()
+        .oneOf(['producer', 'consumer'])
+        .defined()
+        .required(),
+      participantName: string().optional(),
+    }).defined(),
+  });
+  //type createTransportData = InferType<typeof createTransportSchema>;
 
-  const tp = ws.getTopics();
-  let isroom = false;
-  tp.map(async t => {
-    if (rooms.has(t)) {
-      isroom = true;
-      const room = rooms.get(t);
-      const mediasoupRouter = room?.mediasoupRouter;
-      const id = ws.id as string;
+  try {
+    const createTransportS = await createTransportSchema.validate(message);
+    const media = MediaWorker.getInstance();
+    const rooms = media.Rooms;
 
-      try {
-        const type = message.data.type as string;
-        if (mediasoupRouter) {
-          const {transport, params} = await createWebRtcTransport(
-            mediasoupRouter,
-          );
-          if (type == 'producer') {
-            const cldata = room?.client?.get(id);
-            if (cldata) {
-              cldata.producer_transport = transport;
-              console.log('producer_transport berhasil dibuat ', id);
+    const tp = ws.getTopics();
+    let isroom = false;
+    tp.map(async t => {
+      if (rooms.has(t)) {
+        isroom = true;
+        const room = rooms.get(t);
+        const mediasoupRouter = room?.mediasoupRouter;
+        const id = ws.id as string;
 
-              const ps = {
-                method: message.method,
-                response: {
-                  result: 200,
-                  type: type,
-                  createTransport: params,
-                },
-              };
+        try {
+          const type: string = createTransportS.data.type; //message.data.type as string;
+          if (mediasoupRouter) {
+            const {transport, params} = await createWebRtcTransport(
+              mediasoupRouter,
+            );
+            if (type == 'producer') {
+              const cldata = room?.client?.get(id);
+              if (cldata) {
+                cldata.producer_transport = transport;
+                //console.log('producer_transport berhasil dibuat ', id);
 
-              const buf = Buffer.from(JSON.stringify(ps), 'utf8');
-              const ahas = toArrayBuffer(buf);
-              ws.send(ahas, isBinary, true);
-
-              const client = room?.client;
-              client?.forEach((value, key) => {
-                if (key != ws.id) {
-                  const ps = {
-                    method: 'new_producer_transport',
-                    response: {
-                      participantName: value.participantName,
-                    },
-                  };
-                  const buf = Buffer.from(JSON.stringify(ps), 'utf8');
-                  const ahas = toArrayBuffer(buf);
-                  ws.send(ahas, isBinary, true);
-                }
-              });
-
-              const pps = {
-                method: 'new_producer_transport',
-                response: {
-                  participantName: cldata.participantName,
-                },
-              };
-              const buf2 = Buffer.from(JSON.stringify(pps), 'utf8');
-              const ahas2 = toArrayBuffer(buf2);
-              ws.publish(t, ahas2, isBinary, true);
-              console.log('kirim publish new_producer ', id);
-            } else {
-              console.error('cldata not found');
-            }
-          } else if (type == 'consumer') {
-            const data = message.data as unknown as createTransportData;
-            const participantName = data.participantName;
-            const cldata = room?.client?.get(id);
-            if (cldata) {
-              const arrcons = cldata.consumer_transports;
-              let cons = arrcons.find(con => {
-                return con.participantName === participantName;
-              });
-              if (cons) {
-                cons.consumer_transport = transport;
-              } else {
-                cons = {
-                  participantName: participantName,
-                  consumer_transport: transport,
-                  consumer_video: [],
-                  consumer_screen_share: [],
-                  consumer_audio: [],
-                  consumer_data: [],
+                const ps = {
+                  method: message.method,
+                  response: {
+                    result: 200,
+                    type: type,
+                    createTransport: params,
+                  },
                 };
-                arrcons.push(cons);
+
+                const buf = Buffer.from(JSON.stringify(ps), 'utf8');
+                const ahas = toArrayBuffer(buf);
+                ws.send(ahas, isBinary, true);
+
+                const client = room?.client;
+                client?.forEach((value, key) => {
+                  if (key != ws.id) {
+                    const ps = {
+                      method: 'new_producer_transport',
+                      response: {
+                        participantName: value.participantName,
+                      },
+                    };
+                    const buf = Buffer.from(JSON.stringify(ps), 'utf8');
+                    const ahas = toArrayBuffer(buf);
+                    ws.send(ahas, isBinary, true);
+                  }
+                });
+
+                const pps = {
+                  method: 'new_producer_transport',
+                  response: {
+                    participantName: cldata.participantName,
+                  },
+                };
+                const buf2 = Buffer.from(JSON.stringify(pps), 'utf8');
+                const ahas2 = toArrayBuffer(buf2);
+                ws.publish(t, ahas2, isBinary, true);
+                //console.log('kirim publish new_producer ', id);
+              } else {
+                console.error('cldata not found');
               }
+            } else if (type == 'consumer') {
+              const data = createTransportS; //message.data as unknown as createTransportData;
+              const participantName = data.data.participantName;
+              const cldata = room?.client?.get(id);
+              if (cldata) {
+                const arrcons = cldata.consumer_transports;
+                let cons = arrcons.find(con => {
+                  return con.participantName === participantName;
+                });
+                if (cons) {
+                  cons.consumer_transport = transport;
+                } else {
+                  if (participantName) {
+                    cons = {
+                      participantName: participantName,
+                      consumer_transport: transport,
+                      consumer_video: [],
+                      consumer_screen_share: [],
+                      consumer_audio: [],
+                      consumer_data: [],
+                    };
+                    arrcons.push(cons);
+                  }
+                }
 
-              const ps = {
-                method: message.method,
-                response: {
-                  result: 200,
-                  type: type,
-                  createTransport: params,
-                  participantName: participantName,
-                },
-              };
+                const ps = {
+                  method: message.method,
+                  response: {
+                    result: 200,
+                    type: type,
+                    createTransport: params,
+                    participantName: participantName,
+                  },
+                };
 
-              const buf = Buffer.from(JSON.stringify(ps), 'utf8');
-              const ahas = toArrayBuffer(buf);
-              ws.send(ahas, isBinary, true);
-            } else {
-              console.error('cldata not found');
+                const buf = Buffer.from(JSON.stringify(ps), 'utf8');
+                const ahas = toArrayBuffer(buf);
+                ws.send(ahas, isBinary, true);
+              } else {
+                console.error('cldata not found');
+              }
             }
           }
+        } catch (err) {
+          //console.error('erro createtransport ', err);
+          const ps = {
+            method: message.method,
+            response: {
+              result: 400,
+            },
+          };
+          const buf = Buffer.from(JSON.stringify(ps), 'utf8');
+          const ahas = toArrayBuffer(buf);
+          ws.send(ahas, isBinary, true);
         }
-      } catch (err) {
-        console.error('erro createtransport ', err);
-        const ps = {
-          method: message.method,
-          response: {
-            result: 400,
-          },
-        };
-        const buf = Buffer.from(JSON.stringify(ps), 'utf8');
-        const ahas = toArrayBuffer(buf);
-        ws.send(ahas, isBinary, true);
       }
-    }
-  });
+    });
 
-  if (!isroom) {
+    if (!isroom) {
+      const ps = {
+        method: message.method,
+        response: {
+          result: 400,
+        },
+      };
+      const buf = Buffer.from(JSON.stringify(ps), 'utf8');
+      const ahas = toArrayBuffer(buf);
+      ws.send(ahas, isBinary, true);
+    }
+  } catch (err) {
     const ps = {
       method: message.method,
       response: {

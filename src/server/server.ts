@@ -42,7 +42,7 @@ export const initApp = async (ssl: boolean): Promise<TemplatedApp> => {
     compression: ws.SHARED_COMPRESSOR,
     maxPayloadLength: 32 * 1024 * 1024,
     open: () => {
-      console.log('connect ');
+      //console.log('connect ');
     },
     close: ws => {
       let id = '';
@@ -238,26 +238,25 @@ export const initApp = async (ssl: boolean): Promise<TemplatedApp> => {
         );
         const ahas = toArrayBuffer(buf);
         ws.send(ahas, isBinary, true);
-        console.log('LOGIN ', id);
       } else if (msgo.method == 'getRouteCapability') {
         if (!ws.id) {
           console.log('belum punya ID');
         } else {
-          console.log('getRouteCapability ', ws.id);
+          //console.log('getRouteCapability ', ws.id);
           getRouteCapability(ws, msgo, isBinary);
         }
       } else if (msgo.method == 'joinRoom') {
         if (!ws.id) {
           console.log('belum punya ID');
         } else {
-          console.log('joinRoom ', ws.id);
+          //console.log('joinRoom ', ws.id);
           joinRoom(ws, msgo, isBinary);
         }
       } else if (msgo.method == 'createTransport') {
         if (!ws.id) {
           console.log('belum punya ID');
         } else {
-          console.log('createTransport ', ws.id);
+          //console.log('createTransport ', ws.id);
           createTransport(ws, msgo, isBinary);
         }
       } else if (msgo.method == 'connectProducerTransport') {
